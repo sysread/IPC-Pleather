@@ -70,14 +70,6 @@ variable|AnyEvent/CONDITION VARIABLES> is used to synchronize the result. When
 executed locally, the result is immediately assigned to the variable and the
 call to C<sync> is essentially a no-op.
 
-=head1 DIFFERENCES FROM CILK
-
-  * Pleather's scheduler is very simple, using a semaphore to restrict the
-    number of forks across the spawn tree
-  * No support for inlets
-  * Expands to Perl at compile time using pluggable keywords (and therefore
-    requires 5.12 or later)
-
 =head1 SEE ALSO
 
 =over

@@ -11,6 +11,7 @@ requires 'IPC::SysV',        '0';
 
 # Testing
 on test => sub {
+  requires 'Test', '0';
   requires 'Test2::Bundle::Extended', '0';
   requires 'Test::Pod', '0';
 };

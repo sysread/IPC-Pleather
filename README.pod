@@ -10,6 +10,82 @@ IPC::Pleather - Easy to use concurrency primitives inspired by Cilk
 
 version 0.01
 
+=head1 SYNOPSIS
+
+  use IPC::Pleather;
+
+  sub fib {
+    my $n = shift;
+    return $n if $n < 2;
+
+    spawn my $x = fib($n - 1);
+    spawn my $y = fib($n - 2);
+
+    sync $x;
+    sync $y;
+
+    return $x + $y;
+  }
+
+=head1 DESCRIPTION
+
+C has L<Cilk|http://supertech.csail.mit.edu/cilk/>, Perl has Pleather.
+
+IPC::Pleather adopts two keywords from Cilk, C<spawn> and C<sync>. C<spawn>
+signals that the block or expression I<may> be executed concurrently. C<sync>
+denotes a merge point, waiting until the spawned expression is completely
+resolved.
+
+=head1 KEYWORDS
+
+=head2 spawn
+
+Declares a variable whose value may or may not be executed in a forked process.
+Some care is taken to guarantee a fixed cap on the total number of forks.
+Recursive calls to spawn via the spawned expression (as in the Fibonacci
+example in the L</SYNOPSIS>) are bound by the same maximum.
+
+The forking mechanism is implemented using L<AnyEvent::Util/fork_call>,
+allowing the maximum number of processes to be controlled either by setting
+C<$AnyEvent::Util::MAX_FORKS> or with the C<PERL_ANYEVENT_MAX_FORKS>
+environmental variable.
+
+C<spawn> accepts several different expression syntaxes.
+
+  # Block with optional arguments
+  spawn my $var = {...} $arg1, $arg2, $arg3;
+
+  # Subroutine call
+  spawn my $var = do_stuff($arg1, $arg1 + $arg2, ...);
+
+The latter syntax expands to the former, and all expressions in the argument
+list are evaluated in the subprocess (or not, as the case may be), rather than
+in the process from which they were spawned.
+
+=head2 sync
+
+Causes the process to block until the specified variable is fully resolved.
+For spawned variables which executed in a forked process, a L<condition
+variable|AnyEvent/CONDITION VARIABLES> is used to synchronize the result. When
+executed locally, the result is immediately assigned to the variable and the
+call to C<sync> is essentially a no-op.
+
+=head1 DIFFERENCES FROM CILK
+
+  * Pleather's scheduler is very simple, using a semaphore to restrict the
+    number of forks across the spawn tree
+  * No support for inlets
+  * Expands to Perl at compile time using pluggable keywords (and therefore
+    requires 5.12 or later)
+
+=head1 SEE ALSO
+
+=over
+
+=item L<The Cilk Project|http://supertech.csail.mit.edu/cilk/>
+
+=back
+
 =head1 AUTHOR
 
 Jeff Ober <jeffober@gmail.com>

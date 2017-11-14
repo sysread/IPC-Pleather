@@ -83,18 +83,13 @@ use Guard;
 #-------------------------------------------------------------------------------
 # IPC
 #-------------------------------------------------------------------------------
-our $PID = $$;
-our $SEM = IPC::Semaphore->new(IPC_PRIVATE, 1, S_IRUSR|S_IWUSR|IPC_CREAT);
+our $SEM   = IPC::Semaphore->new(IPC_PRIVATE, 1, S_IRUSR|S_IWUSR|IPC_CREAT);
+our $PID   = $$;
 our $DEPTH = 0;
+our $GUARD = guard {$SEM->remove; undef $SEM};
 
-our $SEMGUARD = guard {
-  $SEM->remove;
-  undef $SEM;
-};
+$SEM->setval(0, $AnyEvent::Util::MAX_FORKS);
 
-sset($AnyEvent::Util::MAX_FORKS);
-
-sub sset { $SEM->setval(0, $_[0]) }
 sub sdec { $SEM->op(0, -1, IPC_NOWAIT) }
 sub sinc { $SEM->op(0,  1, IPC_NOWAIT) }
 
